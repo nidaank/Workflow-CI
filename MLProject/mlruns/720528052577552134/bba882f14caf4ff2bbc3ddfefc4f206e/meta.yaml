@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/MLProject/mlruns/720528052577552134/bba882f14caf4ff2bbc3ddfefc4f206e/artifacts
+end_time: 1749925323909
+entry_point_name: ''
+experiment_id: '720528052577552134'
+lifecycle_stage: active
+run_id: bba882f14caf4ff2bbc3ddfefc4f206e
+run_name: 'Params: {''max_depth'': 10, ''min_samples_split'': 2, ''n_estimators'':
+  200}'
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749925321858
+status: 3
+tags: []
+user_id: runner

@@ -1,0 +1,14 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/MLProject/mlruns/720528052577552134/71ddca645030404a832205460bd5e38b/artifacts
+end_time: 1749925329640
+entry_point_name: ''
+experiment_id: '720528052577552134'
+lifecycle_stage: active
+run_id: 71ddca645030404a832205460bd5e38b
+run_name: Grid Search Tuning
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749925305727
+status: 3
+tags: []
+user_id: runner
