@@ -48,9 +48,10 @@ jobs:
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
 
-        git add MLProject/mlruns/0/*/*  # hanya run yang berhasil
-        git commit -m "Add MLflow run artifacts"
-        git push
+        mkdir -p MLProject/mlruns/0
+        git add MLProject/mlruns/0
+        git commit -m "Add mlruns directory"
+        git push origin <branch>
 
     - name: Post Set up Python 3.12.7
       run: echo "Python setup done."
