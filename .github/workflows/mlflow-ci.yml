@@ -7,6 +7,9 @@ on:
     branches: [ main ]
   workflow_dispatch:  # Manual trigger
 
+permissions:
+  contents: write  # <- penting untuk bisa push ke repo
+
 jobs:
   mlflow_retrain:
     runs-on: ubuntu-latest
@@ -40,13 +43,14 @@ jobs:
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
+        git pull origin main  # Untuk menghindari konflik push
         cd MLProject
 
         if [ -d "model-artifacts" ] && [ "$(ls -A model-artifacts)" ]; then
           echo "Menambahkan model-artifacts ke Git..."
           git add model-artifacts
           git commit -m "Add model artifacts from CI run"
-          git push origin main
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
         else
           echo "model-artifacts folder kosong atau tidak ada. Tidak ada yang di-commit."
         fi
