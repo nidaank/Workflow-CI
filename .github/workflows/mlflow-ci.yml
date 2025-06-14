@@ -2,6 +2,8 @@ name: CI - MLflow Project Re-training
 
 on:
   push:
+    branches:
+        - main
     paths:
       - 'MLProject/**'
   workflow_dispatch:
