@@ -12,46 +12,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Set up job
-      run: echo "Starting CI Workflow"
-
-    - name: Run actions/checkout@v3
+    - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Set up Python 3.12.7
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12.7'
 
-    - name: Check Env
-      run: |
-        python --version
-        pip --version
-
     - name: Install dependencies
       run: |
-         python -m pip install --upgrade pip
-         pip install -r requirements.txt || true
-         pip install -r MLProject/conda.yaml || true
-         pip install mlflow scikit-learn matplotlib seaborn pandas joblib
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt || true
+        pip install -r MLProject/conda.yaml || true
+        pip install mlflow scikit-learn matplotlib seaborn pandas joblib
 
     - name: Set MLflow Tracking URI
       run: echo "MLFLOW_TRACKING_URI=file://$(pwd)/MLProject/mlruns" >> $GITHUB_ENV
 
-    - name: Run MLflow project
+    - name: Run MLflow training script
       run: |
         cd MLProject
         python modelling.py
 
-    - name: Upload to GitHub 
+    - name: Upload model-artifacts to GitHub
+      if: success()
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
+        cd MLProject
 
-        mkdir -p MLProject/mlruns/0
-        git add MLProject/mlruns/0
-        git commit -m "Add mlruns directory"
-        git push origin <branch>
+        if [ -d "model-artifacts" ] && [ "$(ls -A model-artifacts)" ]; then
+          echo "Menambahkan model-artifacts ke Git..."
+          git add model-artifacts
+          git commit -m "Add model artifacts from CI run"
+          git push origin main
+        else
+          echo "model-artifacts folder kosong atau tidak ada. Tidak ada yang di-commit."
+        fi
 
     - name: Post Set up Python 3.12.7
       run: echo "Python setup done."

@@ -9,6 +9,7 @@ from mlflow.models.signature import infer_signature
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import joblib
 
 # === Setup Tracking URI untuk lokal & CI ===
 if os.getenv("GITHUB_ACTIONS") == "true":
@@ -28,7 +29,6 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 input_example = X_train.head()
-signature = infer_signature(X_train, X_train[:1])  # Untuk log model
 
 # === Hyperparameter Grid ===
 param_grid = {
@@ -37,9 +37,15 @@ param_grid = {
     'min_samples_split': [2, 5]
 }
 
-os.makedirs("artifacts", exist_ok=True)
+os.makedirs("model-artifacts", exist_ok=True)
 
 # === Parent Run ===
+best_acc = 0
+best_model = None
+best_cm = None
+best_report = None
+best_params = None
+
 with mlflow.start_run(run_name="Grid Search Tuning"):
     for params in ParameterGrid(param_grid):
         model = RandomForestClassifier(
@@ -51,7 +57,6 @@ with mlflow.start_run(run_name="Grid Search Tuning"):
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         acc = accuracy_score(y_test, y_pred)
-
         report = classification_report(y_test, y_pred, output_dict=True)
         cm = confusion_matrix(y_test, y_pred)
 
@@ -69,16 +74,46 @@ with mlflow.start_run(run_name="Grid Search Tuning"):
                 signature=infer_signature(X_train, y_pred)
             )
 
-            # === Confusion Matrix Plot ===
+            # Simpan confusion matrix sementara (per kombinasi)
             plt.figure(figsize=(6, 4))
             sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
             plt.title("Confusion Matrix")
             plt.xlabel("Predicted")
             plt.ylabel("Actual")
-            cm_filename = f"artifacts/cm_{params['n_estimators']}_{params['max_depth']}_{params['min_samples_split']}.png"
+            cm_filename = f"cm_{params['n_estimators']}_{params['max_depth']}_{params['min_samples_split']}.png"
             plt.savefig(cm_filename)
             plt.close()
-
             mlflow.log_artifact(cm_filename, artifact_path="plots")
+            os.remove(cm_filename)
+
+        # Simpan model terbaik
+        if acc > best_acc:
+            best_acc = acc
+            best_model = model
+            best_cm = cm
+            best_report = classification_report(y_test, y_pred)
+            best_params = params
+
+# === Simpan artifacts dari model terbaik ===
+if best_model:
+    joblib.dump(best_model, "model-artifacts/model.pkl")
+
+    # Confusion matrix dari model terbaik
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(best_cm, annot=True, fmt='d', cmap='Blues')
+    plt.title('Best Model - Confusion Matrix')
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+    plt.tight_layout()
+    plt.savefig("model-artifacts/confusion_matrix.png")
+    plt.close()
+
+    # Classification report
+    with open("model-artifacts/classification_report.txt", "w") as f:
+        f.write(best_report)
+
+    print(f"Best model saved with params: {best_params}")
+else:
+    print("No best model found.")
 
 print("Training & logging selesai.")
