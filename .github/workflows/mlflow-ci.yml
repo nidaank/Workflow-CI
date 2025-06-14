@@ -36,7 +36,7 @@ jobs:
     - name: Run MLflow training script
       run: |
         cd MLProject
-        Python modelling.py
+        python modelling.py
 
     - name: Upload model-artifacts to GitHub
       if: success()
