@@ -1,0 +1,43 @@
+name: CI MLflow Project
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  mlflow-train:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name:  Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.7'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt || true
+          pip install -r MLProject/conda.yaml || true
+          pip install mlflow scikit-learn matplotlib seaborn pandas joblib
+
+      - name: Run MLflow Project
+        run: |
+          cd MLProject
+          mlflow run . -e main
+
+      - name: Upload Artifacts (Model, Plots, Report)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlflow-artifacts
+          path: |
+            MLProject/*.pkl
+            MLProject/*.png
+            MLProject/*.txt
