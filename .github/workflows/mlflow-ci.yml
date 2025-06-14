@@ -1,43 +1,64 @@
-name: CI MLflow Project
+name: CI - MLflow Project Re-training
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:  # Manual trigger
+    paths:
+      - 'MLProject/**'
+  workflow_dispatch:
 
 jobs:
-  mlflow-train:
+  mlflow_retrain:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    - name: Set up job
+      run: echo "Starting CI Workflow"
 
-      - name:  Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12.7'
+    - name: Run actions/checkout@v3
+      uses: actions/checkout@v3
 
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt || true
-          pip install -r MLProject/conda.yaml || true
-          pip install mlflow scikit-learn matplotlib seaborn pandas joblib
+    - name: Set up Python 3.12.7
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12.7'
 
-      - name: Run MLflow Project
-        run: |
-          cd MLProject
-          python modelling.py
+    - name: Check Env
+      run: |
+        python --version
+        pip --version
 
-      - name: Upload Artifacts (Model, Plots, Report)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mlflow-artifacts
-          path: |
-            MLProject/*.pkl
-            MLProject/*.png
-            MLProject/*.txt
+    - name: Install dependencies
+      run: |
+        pip install -r MLProject/requirements.txt
+
+    - name: Set MLflow Tracking URI
+      run: echo "MLFLOW_TRACKING_URI=file://$(pwd)/MLProject/mlruns" >> $GITHUB_ENV
+
+    - name: Run MLflow project
+      run: |
+        cd MLProject
+        python modelling_CI.py
+
+    - name: Upload to GitHub 
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+
+        git add MLProject/mlruns
+        git add MLProject/model.pkl || true
+
+        if git diff --cached --quiet; then
+          echo "No changes to commit."
+        else
+          git commit -m "Auto-log MLflow artifacts from CI run"
+          git push
+        fi
+
+    - name: Post Set up Python 3.12.7
+      run: echo "Python setup done."
+
+    - name: Post Run actions/checkout@v3
+      run: echo "Checkout complete."
+
+    - name: Complete job
+      run: echo "MLflow CI workflow finished."
