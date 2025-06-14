@@ -97,32 +97,4 @@ with mlflow.start_run(run_name="Grid Search Tuning") as parent_run:
                 best_params = params
                 best_run_id = child_run.info.run_id
 
-# # === Simpan artifacts dari model terbaik ===
-# if best_model:
-#     joblib.dump(best_model, "model-artifacts/model.pkl")
-
-#     # Confusion matrix dari model terbaik
-#     plt.figure(figsize=(8, 6))
-#     sns.heatmap(best_cm, annot=True, fmt='d', cmap='Blues')
-#     plt.title('Best Model - Confusion Matrix')
-#     plt.xlabel('Predicted')
-#     plt.ylabel('Actual')
-#     plt.tight_layout()
-#     plt.savefig("model-artifacts/confusion_matrix.png")
-#     plt.close()
-
-#     # Classification report
-#     with open("model-artifacts/classification_report.txt", "w") as f:
-#         f.write(best_report)
-
-#     # === Copy all MLflow-logged model files ===
-#     model_src = os.path.join("mlruns", best_run_id, "artifacts", "model")
-#     model_dst = os.path.join("model-artifacts", "model")
-#     if os.path.exists(model_src):
-#         shutil.copytree(model_src, model_dst, dirs_exist_ok=True)
-
-#     print(f"Best model saved with params: {best_params}")
-# else:
-#     print("No best model found.")
-
 print("Training & logging selesai.")

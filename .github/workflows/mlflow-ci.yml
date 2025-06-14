@@ -26,8 +26,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install -r requirements.txt || true
         pip install -r MLProject/conda.yaml || true
-        pip install -r MLProject/requirements.txt || true
         pip install mlflow scikit-learn matplotlib seaborn pandas joblib
 
     - name: Set MLflow Tracking URI
