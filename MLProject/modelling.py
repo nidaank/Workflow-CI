@@ -71,7 +71,7 @@ with mlflow.start_run(run_name="Grid Search Tuning") as parent_run:
 
             mlflow.sklearn.log_model(
                 sk_model=model,
-                artifact_path="model-artifacts",
+                artifact_path="model",
                 input_example=input_example,
                 signature=infer_signature(X_train, y_pred)
             )
