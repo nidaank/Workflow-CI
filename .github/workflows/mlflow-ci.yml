@@ -46,13 +46,22 @@ jobs:
         git pull origin main  # Untuk menghindari konflik push
         cd MLProject
 
+        changes=false
         if [ -d "model-artifacts" ] && [ "$(ls -A model-artifacts)" ]; then
-          echo "Menambahkan model-artifacts ke Git..."
           git add model-artifacts
-          git commit -m "Add model artifacts from CI run"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
+          changes=true
+        fi
+
+        if [ -d "mlruns" ] && [ "$(ls -A mlruns)" ]; then
+          git add mlruns
+          changes=true
+        fi
+
+        if $changes; then
+          git commit -m "Add model artifacts and mlruns from CI run"
+          git push origin main
         else
-          echo "model-artifacts folder kosong atau tidak ada. Tidak ada yang di-commit."
+          echo "No new artifacts to commit."
         fi
 
     - name: Post Set up Python 3.12.7
