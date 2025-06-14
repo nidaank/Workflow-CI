@@ -30,7 +30,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -r MLProject/requirements.txt
+         python -m pip install --upgrade pip
+         pip install -r requirements.txt || true
+         pip install -r MLProject/conda.yaml || true
+         pip install mlflow scikit-learn matplotlib seaborn pandas joblib
 
     - name: Set MLflow Tracking URI
       run: echo "MLFLOW_TRACKING_URI=file://$(pwd)/MLProject/mlruns" >> $GITHUB_ENV
@@ -38,7 +41,7 @@ jobs:
     - name: Run MLflow project
       run: |
         cd MLProject
-        python modelling_CI.py
+        python modelling.py
 
     - name: Upload to GitHub 
       run: |
