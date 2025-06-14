@@ -60,6 +60,3 @@ jobs:
 
     - name: Post Run actions/checkout@v3
       run: echo "Checkout complete."
-
-    - name: Complete job
-      run: echo "MLflow CI workflow finished."

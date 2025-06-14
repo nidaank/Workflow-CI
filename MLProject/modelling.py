@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import joblib
+import shutil
 
 # === Setup Tracking URI untuk lokal & CI ===
 if os.getenv("GITHUB_ACTIONS") == "true":
@@ -45,8 +46,9 @@ best_model = None
 best_cm = None
 best_report = None
 best_params = None
+best_run_id = None
 
-with mlflow.start_run(run_name="Grid Search Tuning"):
+with mlflow.start_run(run_name="Grid Search Tuning") as parent_run:
     for params in ParameterGrid(param_grid):
         model = RandomForestClassifier(
             n_estimators=params['n_estimators'],
@@ -60,7 +62,7 @@ with mlflow.start_run(run_name="Grid Search Tuning"):
         report = classification_report(y_test, y_pred, output_dict=True)
         cm = confusion_matrix(y_test, y_pred)
 
-        with mlflow.start_run(nested=True, run_name=f"Params: {params}"):
+        with mlflow.start_run(nested=True, run_name=f"Params: {params}") as child_run:
             mlflow.log_params(params)
             mlflow.log_metric("accuracy", acc)
             mlflow.log_metric("precision", report['weighted avg']['precision'])
@@ -86,13 +88,14 @@ with mlflow.start_run(run_name="Grid Search Tuning"):
             mlflow.log_artifact(cm_filename, artifact_path="plots")
             os.remove(cm_filename)
 
-        # Simpan model terbaik
-        if acc > best_acc:
-            best_acc = acc
-            best_model = model
-            best_cm = cm
-            best_report = classification_report(y_test, y_pred)
-            best_params = params
+            # Simpan model terbaik
+            if acc > best_acc:
+                best_acc = acc
+                best_model = model
+                best_cm = cm
+                best_report = classification_report(y_test, y_pred)
+                best_params = params
+                best_run_id = child_run.info.run_id
 
 # === Simpan artifacts dari model terbaik ===
 if best_model:
@@ -111,6 +114,12 @@ if best_model:
     # Classification report
     with open("model-artifacts/classification_report.txt", "w") as f:
         f.write(best_report)
+
+    # === Copy all MLflow-logged model files ===
+    model_src = os.path.join("mlruns", best_run_id, "artifacts", "model")
+    model_dst = os.path.join("model-artifacts", "model")
+    if os.path.exists(model_src):
+        shutil.copytree(model_src, model_dst, dirs_exist_ok=True)
 
     print(f"Best model saved with params: {best_params}")
 else:
