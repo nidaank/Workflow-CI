@@ -2,11 +2,10 @@ name: CI - MLflow Project Re-training
 
 on:
   push:
-    branches:
-        - main
-    paths:
-      - 'MLProject/**'
-  workflow_dispatch:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   mlflow_retrain:
