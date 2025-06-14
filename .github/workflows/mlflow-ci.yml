@@ -26,8 +26,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt || true
-        pip install -r MLProject/conda.yaml || true
+        pip install -r MLProject/conda.yaml
         pip install mlflow scikit-learn matplotlib seaborn pandas joblib
 
     - name: Set MLflow Tracking URI
@@ -36,7 +35,7 @@ jobs:
     - name: Run MLflow training script
       run: |
         cd MLProject
-        python modelling.py
+        mlflow run MLProject --env-manager=local
 
     - name: Upload model-artifacts to GitHub
       if: success()
@@ -46,15 +45,8 @@ jobs:
         git pull origin main  # Untuk menghindari konflik push
         cd MLProject
 
-        changes=false
-        if [ -d "model-artifacts" ] && [ "$(ls -A model-artifacts)" ]; then
-          git add model-artifacts
-          changes=true
-        fi
-
         if [ -d "mlruns" ] && [ "$(ls -A mlruns)" ]; then
           git add mlruns
-          changes=true
         fi
 
         if $changes; then
