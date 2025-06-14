@@ -40,61 +40,60 @@ param_grid = {
 
 os.makedirs("mlruns", exist_ok=True)
 
-# === Parent Run ===
+# === Cari kombinasi terbaik ===
 best_acc = 0
 best_model = None
 best_cm = None
 best_report = None
 best_params = None
-best_run_id = None
+best_y_pred = None
 
-with mlflow.start_run(run_name="Grid Search Tuning") as parent_run:
-    for params in ParameterGrid(param_grid):
-        model = RandomForestClassifier(
-            n_estimators=params['n_estimators'],
-            max_depth=params['max_depth'],
-            min_samples_split=params['min_samples_split'],
-            random_state=42
-        )
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
-        acc = accuracy_score(y_test, y_pred)
-        report = classification_report(y_test, y_pred, output_dict=True)
-        cm = confusion_matrix(y_test, y_pred)
+for params in ParameterGrid(param_grid):
+    model = RandomForestClassifier(
+        n_estimators=params['n_estimators'],
+        max_depth=params['max_depth'],
+        min_samples_split=params['min_samples_split'],
+        random_state=42
+    )
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
 
-        with mlflow.start_run(nested=True, run_name=f"Params: {params}") as child_run:
-            mlflow.log_params(params)
-            mlflow.log_metric("accuracy", acc)
-            mlflow.log_metric("precision", report['weighted avg']['precision'])
-            mlflow.log_metric("recall", report['weighted avg']['recall'])
-            mlflow.log_metric("f1_score", report['weighted avg']['f1-score'])
+    if acc > best_acc:
+        best_acc = acc
+        best_model = model
+        best_cm = confusion_matrix(y_test, y_pred)
+        best_report = classification_report(y_test, y_pred)
+        best_params = params
+        best_y_pred = y_pred
 
-            mlflow.sklearn.log_model(
-                sk_model=model,
-                artifact_path="model",
-                input_example=input_example,
-                signature=infer_signature(X_train, y_pred)
-            )
+# === Log hanya model terbaik ke MLflow ===
+with mlflow.start_run(run_name="Best Model Logging") as run:
+    mlflow.log_params(best_params)
+    report = classification_report(y_test, best_y_pred, output_dict=True)
+    mlflow.log_metric("accuracy", best_acc)
+    mlflow.log_metric("precision", report['weighted avg']['precision'])
+    mlflow.log_metric("recall", report['weighted avg']['recall'])
+    mlflow.log_metric("f1_score", report['weighted avg']['f1-score'])
 
-            # Simpan confusion matrix sementara (per kombinasi)
-            plt.figure(figsize=(6, 4))
-            sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
-            plt.title("Confusion Matrix")
-            plt.xlabel("Predicted")
-            plt.ylabel("Actual")
-            cm_filename = f"cm_{params['n_estimators']}_{params['max_depth']}_{params['min_samples_split']}.png"
-            plt.savefig(cm_filename)
-            plt.close()
-            mlflow.log_artifact(cm_filename, artifact_path="plots")
-            os.remove(cm_filename)
+    # Log model terbaik
+    mlflow.sklearn.log_model(
+        sk_model=best_model,
+        artifact_path="model",
+        input_example=input_example,
+        signature=infer_signature(X_train, best_y_pred)
+    )
 
-            # Simpan model terbaik
-            if acc > best_acc:
-                best_acc = acc
-                best_model = model
-                best_cm = cm
-                best_report = classification_report(y_test, y_pred)
-                best_params = params
-                best_run_id = child_run.info.run_id
+    # Log confusion matrix
+    plt.figure(figsize=(6, 4))
+    sns.heatmap(best_cm, annot=True, fmt="d", cmap="Blues")
+    plt.title("Confusion Matrix")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    cm_path = "confusion_matrix.png"
+    plt.savefig(cm_path)
+    plt.close()
+    mlflow.log_artifact(cm_path, artifact_path="plots")
+    os.remove(cm_path)
 
-print("Training & logging selesai.")
+print("Training selesai. Model terbaik telah disimpan ke MLflow.")
