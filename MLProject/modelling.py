@@ -14,7 +14,7 @@ import shutil
 
 # === Setup Tracking URI untuk lokal & CI ===
 if os.getenv("GITHUB_ACTIONS") == "true":
-    mlflow.set_tracking_uri("file:///tmp/mlruns")
+    mlflow.set_tracking_uri("file:./mlruns")
 else:
     mlflow.set_tracking_uri("http://127.0.0.1:5000/")
 
@@ -38,7 +38,7 @@ param_grid = {
     'min_samples_split': [2, 5]
 }
 
-os.makedirs("model-artifacts", exist_ok=True)
+os.makedirs("mlruns", exist_ok=True)
 
 # === Parent Run ===
 best_acc = 0

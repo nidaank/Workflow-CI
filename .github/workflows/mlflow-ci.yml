@@ -50,12 +50,8 @@ jobs:
           git add mlruns
         fi
 
-        if $changes; then
-          git commit -m "Add model artifacts and mlruns from CI run"
-          git push origin main
-        else
-          echo "No new artifacts to commit."
-        fi
+        git commit -m "Add mlruns from CI run"
+        git push origin main
 
     - name: Post Set up Python 3.12.7
       run: echo "Python setup done."
