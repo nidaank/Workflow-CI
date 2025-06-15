@@ -1,0 +1,14 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/MLProject/mlruns/804298498005100569/2bae7fc57162452989a0ae9f36b4e1fc/artifacts
+end_time: 1749960138758
+entry_point_name: ''
+experiment_id: '804298498005100569'
+lifecycle_stage: active
+run_id: 2bae7fc57162452989a0ae9f36b4e1fc
+run_name: Best Model Logging
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1749960136148
+status: 3
+tags: []
+user_id: runner
